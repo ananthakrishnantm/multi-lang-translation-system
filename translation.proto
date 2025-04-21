@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+service TranslationService {
+  rpc TranslateFrenchToEnglish (TranslateRequest) returns (TranslateResponse);
+}
+
+message TranslateRequest {
+  string french_text = 1;
+}
+
+message TranslateResponse {
+  string english_text = 1;
+}

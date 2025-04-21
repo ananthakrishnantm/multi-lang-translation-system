@@ -1,0 +1,9 @@
+Flask==2.3.3
+Flask-Cors==3.0.10
+requests==2.31.0
+grpcio==1.59.0
+grpcio-tools==1.59.0
+sqlite3==0.0.1
+xmltodict==0.13.0
+protobuf==4.23.4
+

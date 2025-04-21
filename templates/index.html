@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="refresh" content="5" />
+    <title>Azure Translation Service</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      textarea {
+        width: 100%;
+        min-height: 100px;
+      }
+      .status-list {
+        list-style: none;
+        padding: 0;
+      }
+      .status-item {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+      }
+      .processing-status {
+        color: #0066cc;
+      }
+      .completed-status {
+        color: #009900;
+      }
+      .error-status {
+        color: #cc0000;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Azure Translation Service with XML Processing</h1>
+
+    <!-- Form to take input -->
+    <form method="POST" action="/translate">
+      <div class="form-group">
+        <label for="client_id">Client ID:</label><br />
+        <input type="text" id="client_id" name="client_id" required />
+      </div>
+
+      <div class="form-group">
+        <label for="text">Enter text to translate:</label><br />
+        <textarea id="text" name="text" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="target_language">Target Language (e.g., fr, es, de):</label
+        ><br />
+        <input
+          type="text"
+          id="target_language"
+          name="target_language"
+          value="fr"
+          required
+        />
+      </div>
+
+      <input type="submit" value="Translate" />
+    </form>
+
+    {% if status_message %}
+    <p id="status-message">{{ status_message }}</p>
+    {% endif %}
+
+    <h2>Translation Status</h2>
+
+    {% if client_states %}
+
+    <ul class="status-list">
+      {% for client_id, state in client_states.items() %}
+      <li class="status-item">
+        <strong>Client ID:</strong> {{ client_id }}<br />
+        <span
+          class="{% if state.status == 'Processing' %}processing-status{% elif state.status == 'Completed' %}completed-status{% elif state.status == 'Error' %}error-status{% endif %}"
+        >
+          Status: {{ state.status }} </span
+        ><br />
+        <strong>Original Text:</strong><br />{{ state.original_text }}<br />
+        <strong>Translated Text:</strong><br />{{ state.translated_text }}<br />
+        <strong>XML Processed Reversed Text:</strong><br />{{
+        state.xml_processed_text }}<br />
+
+        <strong>gRPC Translated Text:</strong><br />{{ state.grpc_processed_text
+        }}<br />
+        <strong>Time Remaining:</strong> {{ state.time_remaining }} seconds
+      </li>
+
+      <!-- JavaScript to log the outputs -->
+      <script>
+        const grpcTranslatedText = "{{ state.grpc_processed_text }}";
+        const translatedText = "{{ state.translated_text }}";
+        const xmlProcessedText = "{{ state.xml_processed_text }}";
+
+        console.log("gRPC Translated Text: ", grpcTranslatedText);
+        console.log("Translated Text: ", translatedText);
+        console.log("XML Processed Text: ", xmlProcessedText);
+
+        let interval;
+
+        // Function to check the translation status
+        function checkStatus() {
+          fetch("/status_message")
+            .then((response) => response.json())
+            .then((data) => {
+              const statusMessage = data.status_message;
+              const statusElement = document.getElementById("status-message");
+
+              // Update status message in the UI
+              statusElement.textContent = statusMessage;
+
+              // If the queue is empty, stop polling
+              if (statusMessage === "Queue is empty") {
+                clearInterval(interval); // Stop polling
+              }
+            })
+            .catch((error) => {
+              console.error("Error fetching status message:", error);
+            });
+        }
+
+        // Start checking status every 5 seconds
+        window.onload = function () {
+          interval = setInterval(checkStatus, 500); // Check every 5 seconds
+        };
+      </script>
+
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </body>
+</html>
